@@ -1,0 +1,8 @@
+#Title_Page(Title.png)#
+
+#Header#
+#TextBoxStart#
+Welcome to *Five Move Murder Fest* , a lightweight roleplaying game designed around the concept
+of "Who shoots first wins".
+
+#TextBoxEnd#
