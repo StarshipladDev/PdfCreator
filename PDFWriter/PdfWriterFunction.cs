@@ -21,6 +21,11 @@ namespace PDFWriter
         Graphics g = null;
         Random rand = null;
         MemoryStream pdfFile = null;
+
+        public enum commandEnums{
+            TitlePage,
+            None
+        }
         public PdfWriterFunction()
         {
             LoadImage();
@@ -113,6 +118,36 @@ namespace PDFWriter
                 System.IO.Directory.CreateDirectory("TestImages");
             }
             img.Save("TestImages/TestImage.png");
+        }
+        public commandEnums ReadRenderFileLine(string line)
+        {
+            bool hasCommand = (line != null && line.Length > 0 && line.ToCharArray()[0] == '#' && line.Trim(' ').ToCharArray()[line.Trim(' ').Length-1]=='#');
+            if (!hasCommand)
+            {
+                return commandEnums.None;
+            }
+            else
+            {
+                var commandTest = "title_page".ToLower();
+                if (line.Length>commandTest.Length+2 && line.ToLower().Substring(1, commandTest.Length).Equals(commandTest))
+                {
+                    return commandEnums.TitlePage;
+                }
+                return commandEnums.None;
+            }
+        }
+        public bool ParseRenderFile(string fileName)
+        {
+            var streamReaderLines = File.ReadAllLines(fileName);
+            foreach( var line in streamReaderLines)
+            {
+                var result = ReadRenderFileLine(line);
+                if (result != commandEnums.None)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

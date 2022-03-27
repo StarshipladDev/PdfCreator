@@ -22,6 +22,11 @@ namespace PDFWriterTestProject
             Assert.IsTrue(System.IO.File.Exists("TestImages/TestImage.png"));
 
         }
-
+        [TestMethod]
+        public void TestIfFilesRead()
+        {
+            PdfWriterFunction pdfWriter = new PdfWriterFunction();
+            Assert.IsTrue(pdfWriter.ParseRenderFile("FMMF_2.txt"));
+        }
     }
 }
