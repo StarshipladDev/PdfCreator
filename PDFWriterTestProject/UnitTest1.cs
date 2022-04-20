@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PDFWriter;
 using System;
+using System.IO;
 
 namespace PDFWriterTestProject
 {
@@ -26,6 +27,13 @@ namespace PDFWriterTestProject
         public void TestIfFilesRead()
         {
             PdfWriterFunction pdfWriter = new PdfWriterFunction();
+            string text ="#Title_Page(TitleImage)#";
+            
+            if (File.Exists(String.Format("TestScript.txt")))
+            {
+                File.Delete(String.Format("TestScript.txt"));
+            }
+            File.WriteAllLines("TestScript.txt",new string[]{ text });
             Assert.IsTrue(pdfWriter.ParseRenderFile("FMMF_2.txt"));
         }
     }
