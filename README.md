@@ -1,6 +1,6 @@
 # PDFCreator - A Utility To Convert .TXT TO PDF With Text Formatting And Images
 
-![Example.png](An example image of the program)
+![An example image of the program](Example.png)
 
 ## Notes/Know Bugs:
 
@@ -20,7 +20,7 @@ Convert .txt Files Into .pdf Files
 ## View of progress
 **Build 1 - Basic Text / Headers and Title Images**
 
-![Step1.png](First Build)
+![First Build](Step1.png)
 
 
 
