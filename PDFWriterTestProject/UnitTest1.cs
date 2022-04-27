@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PDFWriter;
 using System;
+using System.IO;
 
 namespace PDFWriterTestProject
 {
@@ -17,7 +18,7 @@ namespace PDFWriterTestProject
                 System.IO.Directory.Delete("TestImages");
             }
             
-            PdfWriterFunction pdfWriter = new PdfWriterFunction();
+            PdfWriterFunction pdfWriter = new PdfWriterFunction(true);
             Assert.IsTrue(System.IO.Directory.Exists("TestImages"));
             Assert.IsTrue(System.IO.File.Exists("TestImages/TestImage.png"));
 
@@ -25,8 +26,24 @@ namespace PDFWriterTestProject
         [TestMethod]
         public void TestIfFilesRead()
         {
-            PdfWriterFunction pdfWriter = new PdfWriterFunction();
-            Assert.IsTrue(pdfWriter.ParseRenderFile("FMMF_2.txt"));
+            PdfWriterFunction pdfWriter = new PdfWriterFunction(false,true);
+            string text = "#Title_Page(TestImages/TestImage.png)#";
+            
+            if (File.Exists(String.Format("TestScript.txt")))
+            {
+                File.Delete(String.Format("TestScript.txt"));
+            }
+            if (System.IO.Directory.Exists("TestPdfs"))
+            {
+                if (File.Exists(String.Format("TestPdfs/TestScript.pdf")))
+                {
+                    File.Delete(String.Format("TestPdfs/TestScript.pdf"));
+                } 
+            }
+            File.WriteAllLines("TestScript.txt",new string[]{ text });
+            pdfWriter.CreatePDF("TestScript");
+            Assert.IsTrue(pdfWriter.ParseRenderFile("TestScript.txt"));
+            Assert.IsTrue(File.Exists("TestPdfs/TestScript.pdf"));
         }
     }
 }
