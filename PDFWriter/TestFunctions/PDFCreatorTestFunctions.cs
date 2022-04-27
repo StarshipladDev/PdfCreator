@@ -66,5 +66,40 @@ namespace PDFWriter.TestFunctions
             document.Close();
 
         }
+        public static void FilltestImage(Bitmap img)
+        {
+            Random rand = new Random();
+            for (int x = 0; x < img.Width; x++)
+            {
+
+                int r = rand.Next(0, 255);
+                int g = rand.Next(0, 255);
+                int b = rand.Next(0, 255);
+                for (int y = 0; y < img.Height; y++)
+                {
+                    r = (int)Math.Abs(r + rand.Next(10) - 5) % 255;
+                    g = (int)Math.Abs(g + rand.Next(10) - 5) % 255;
+                    b = (int)Math.Abs(b + rand.Next(10) - 5) % 255;
+                    img.SetPixel(x, y, System.Drawing.Color.FromArgb(255, r, g, b));
+                }
+            }
+            var brush = new SolidBrush(System.Drawing.Color.Black);
+            var font = new Font("Times New Roman", 12.0f);
+            font = new Font(font, FontStyle.Bold);
+            Graphics.FromImage(img).DrawString("Test PDF File", font, brush, img.Width / 2, font.Size);
+            if (!System.IO.Directory.Exists("TestImages"))
+            {
+                System.IO.Directory.CreateDirectory("TestImages");
+            }
+            img.Save("TestImages/TestImage.png");
+        }
+
+        public static void LoadImage()
+        {
+            Bitmap testImage = new Bitmap(210, 297);
+            var g = Graphics.FromImage(testImage);
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            PDFCreatorTestFunctions.FilltestImage(testImage);
+        }
     }
 }

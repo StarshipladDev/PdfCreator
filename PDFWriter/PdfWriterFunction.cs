@@ -31,12 +31,33 @@ namespace PDFWriter
             HeaderText,
             None
         }
-        public PdfWriterFunction(bool isTest = false)
+        public PdfWriterFunction(bool isTest = false,bool isTestOfProperFunctionality = false)
         {
             if (isTest)
             {
-                LoadImage();
+                PDFCreatorTestFunctions.LoadImage();
                 PDFCreatorTestFunctions.CreateTestPdf();
+            }
+            else if (!isTestOfProperFunctionality)
+            {
+                Console.WriteLine("Select a File To Draw a PDF From :" );
+
+                var listOfFiles = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory);
+                foreach (var file in listOfFiles)
+                {
+                    Console.WriteLine("File :" + file);
+                }
+                var fileName = Console.ReadLine();
+                if (File.Exists(fileName)) {
+                    Console.WriteLine("Creating File");
+                    var pdfFileName = Path.GetFileNameWithoutExtension(fileName);
+                    CreatePDF(pdfFileName);
+                    ParseRenderFile(fileName);
+                }
+                else
+                {
+                    Console.WriteLine("Cannot locate "+fileName);
+                }
             }
         }
         public void CreatePDF(string FileName)
@@ -49,28 +70,15 @@ namespace PDFWriter
             {
                 File.Delete(String.Format("TestPdfs/{0}.pdf", FileName));
             }
-            string destination = "TestPdfs/pdf.pdf";
+            string destination = String.Format("TestPdfs/{0}.pdf", FileName);
             PdfWriter pdfWriter = new PdfWriter(destination);
             PdfDocument pdfDoc = new PdfDocument(pdfWriter);
             Document document = new Document(pdfDoc);
             document.SetMargins(0f, 0f, 0f, 0f);
+            this.pdfDocument = document;
         }
         public void WriteBasicText(string lineOfText)
         {
-
-
-
-            /* Title Page */
-            ImageData imgFile = ImageDataFactory.Create(@"TestImages/TestImage.png");
-            iText.Layout.Element.Image img = new iText.Layout.Element.Image(imgFile)
-                .SetTextAlignment(TextAlignment.CENTER)
-                .SetHeight(100)
-                .SetAutoScale(true);
-            this.pdfDocument.Add(img);
-
-
-            /*New Page */
-            this.pdfDocument.Add(new AreaBreak());
             /* First Page Content */
             Paragraph para = new Paragraph(lineOfText)
                 .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
@@ -79,9 +87,6 @@ namespace PDFWriter
         }
         public void WriteHeaderText(string lineOfText)
         {
-            /*New Page */
-            this.pdfDocument.Add(new AreaBreak());
-
             LineSeparator seperator = new LineSeparator(new SolidLine());
             this.pdfDocument.Add(seperator);
             /* CreatePDF Bold Font */
@@ -93,40 +98,23 @@ namespace PDFWriter
                 .SetFontSize(20);
             this.pdfDocument.Add(para);
         }
-        public void LoadImage()
+        public bool InputImage(string imageFileName,int scale = 100)
         {
-            Bitmap testImage = new Bitmap(210, 297);
-            g = Graphics.FromImage(testImage);
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-            FilltestImage(testImage);
-
-        }
-        public void FilltestImage(Bitmap img)
-        {
-            rand = new Random();
-            for( int x =0 ;x< img.Width; x++)
+            if (File.Exists(imageFileName) && this.pdfDocument!= null)
             {
 
-                int r = rand.Next(0, 255);
-                int g = rand.Next(0, 255);
-                int b = rand.Next(0, 255);
-                for (int y = 0; y < img.Height; y++)
-                {
-                    r= (int)Math.Abs(r+ rand.Next(10)-5)%255;
-                    g = (int)Math.Abs(g + rand.Next(10) - 5) % 255;
-                    b = (int)Math.Abs(b + rand.Next(10) - 5)%255;
-                    img.SetPixel(x,y, System.Drawing.Color.FromArgb(255,r,g,b));
-                }
+                ImageData imgFile = ImageDataFactory.Create(@imageFileName);
+                iText.Layout.Element.Image img = new iText.Layout.Element.Image(imgFile)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetHeight(scale)
+                    .SetAutoScale(true);
+                this.pdfDocument.Add(img);
+                return true;
             }
-            var brush = new SolidBrush(System.Drawing.Color.Black);
-            var font = new Font("Times New Roman", 12.0f);
-             font = new Font(font, FontStyle.Bold);
-            g.DrawString("Test PDF File", font, brush, img.Width / 2, font.Size);
-            if( !System.IO.Directory.Exists("TestImages"))
+            else
             {
-                System.IO.Directory.CreateDirectory("TestImages");
+                return false;
             }
-            img.Save("TestImages/TestImage.png");
         }
         public commandEnums GetFileLineCommandType(string line)
         {
@@ -142,7 +130,7 @@ namespace PDFWriter
                 var commandArray = Enum.GetNames(commandEnums.None.GetType());
                 foreach (var command in commandArray)
                 {
-                    if (line.Length > command.Length + 2 && line.ToLower().Substring(1, command.Length).Equals(command))
+                    if (line.Length >= command.Length + 2 && line.ToLower().Substring(1, command.Length).Equals(command.ToLower()))
                     {
                         if (commandArray.ToList().IndexOf(command) != -1) {
                             return (commandEnums)Enum.Parse(commandEnums.None.GetType(), command);
@@ -151,6 +139,15 @@ namespace PDFWriter
                 }
                 return commandEnums.None;
             }
+        }
+
+        public string GetArgumentInBrackets(string commandLine)
+        {
+            if(commandLine.IndexOf('(')!= -1 && commandLine.LastIndexOf(')') != -1)
+            {
+                return commandLine.Trim(' ').Substring(commandLine.IndexOf('(') + 1, commandLine.LastIndexOf(')') - commandLine.IndexOf('(') - 1);
+            }
+            return commandLine;
         }
         public bool ParseRenderFile(string fileName)
         {
@@ -168,10 +165,19 @@ namespace PDFWriter
                         {
                             isTextBox = true;
                         }
-
+                        else if (result == commandEnums.TextBoxEnd && isTextBox)
+                        {
+                            isTextBox = false;
+                            WriteBasicText("\n");
+                        }
+                        else if (result == commandEnums.TitlePage)
+                        {
+                            InputImage(GetArgumentInBrackets(line));
+                        }
                         else if (result == commandEnums.HeaderText)
                         {
-                            WriteHeaderText(line.Trim(' ').Substring(line.IndexOf('(')+1, line.LastIndexOf(')')-line.IndexOf('(') + 1));
+                            WriteHeaderText(GetArgumentInBrackets(line));
+                            WriteBasicText("\n");
                         }
                     }
                     else
@@ -187,6 +193,10 @@ namespace PDFWriter
                     Console.WriteLine("Error encountered: "+e.StackTrace+" \n "+e.Message);
                     return false;
                 }
+            }
+            if (this.pdfDocument != null) 
+            { 
+                this.pdfDocument.Close(); 
             }
             return true;
         }
